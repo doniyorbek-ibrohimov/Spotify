@@ -43,6 +43,9 @@
 #
 #
 from rest_framework.response import Response
+from rest_framework import filters
+import django_filters
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
@@ -65,6 +68,9 @@ class AlbumModelViewSet(ModelViewSet):
 class SingerModelViewSet(ModelViewSet):
     queryset = Singer.objects.all()
     serializer_class = SingerSerializer
+    filter_backends = [filters.SearchFilter,filters.OrderingFilter]
+    search_fields=['name']
+    ordering_fields=['name','duration']
 
     @action(detail=True, methods=['get'], url_path='albums')
     def get_album(self, request, pk):
@@ -74,9 +80,22 @@ class SingerModelViewSet(ModelViewSet):
         return Response(serializer.data)
 
 
+
+class SongFilter(django_filters.FilterSet):
+    start=django_filters.NumberFilter(field_name='duration',lookup_expr='gte')
+    end=django_filters.NumberFilter(field_name='duration',lookup_expr='lte')
+
+    class Meta:
+        model=Song
+        fields=['genre','album']
+
+
 class SongModelViewSet(ModelViewSet):
     queryset = Song.objects.all()
     serializer_class = SongSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class=SongFilter
+
 
 
 
